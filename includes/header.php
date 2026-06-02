@@ -1,1 +1,1 @@
-<h1>Teste</h1>
+<img src="../assets/img/Logo_Claro.png" alt="Logo Azimute" style="width: 6%;">
