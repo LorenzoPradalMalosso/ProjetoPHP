@@ -143,7 +143,7 @@ Registra o andamento de cada usuário em cada progressão.
 | `status` | `varchar(30)` | NOT NULL, DEFAULT `pendente`, CHECK | Status da progressão |
 | `data_conclusao` | `varchar(10)` | NOT NULL | Data registrada para conclusão ou atualização |
 
-Valores aceitos em `status`: `pendente`, `concluída` e `rejeitada`. No código PHP também há tratamento para variações sem acento, como `concluida`.
+Valores aceitos em `status`: `pendente`, `concluida` e `rejeitada`.
 
 #### `ramosconhecimento`
 
@@ -205,7 +205,6 @@ O arquivo `backup.sql` também importa dados iniciais com `COPY`, incluindo:
 - catálogo de `progressoes`;
 - catálogo de `ramosconhecimento`;
 - catálogo de `especialidades`;
-- usuários e conquistas de exemplo em `usuarios`, `usuarioprogressoes` e `usuarioespecialidades`.
 
 ## Estrutura Principal
 
