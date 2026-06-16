@@ -38,6 +38,24 @@
         }
     }
 
+    function isDoneStatus(?string $status): bool
+    {
+        return in_array($status, ["concluída", "concluida", "concluído", "concluido", "concluÃ­da", "concluÃƒÂ­da"], true);
+    }
+
+    function statusBadgeClass(?string $status): string
+    {
+        if (isDoneStatus($status)) {
+            return "status-concluida";
+        }
+
+        if ($status === "rejeitada") {
+            return "status-rejeitada";
+        }
+
+        return "status-pendente";
+    }
+
     $stmt = $conexao->prepare("
         SELECT
             u.*,
@@ -145,6 +163,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Perfil | Azimute</title>
     <link rel="stylesheet" href="../assets/css/style.css">
+    <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js" defer></script>
+    <script src="../assets/js/script.js" defer></script>
 </head>
 <body class="app-body">
     <div class="app-shell">
@@ -158,8 +178,7 @@
                 <a class="active" href="perfil.php"><span>○</span> Perfil</a>
                 <a href="progressoes.php"><span>□</span> Progressões</a>
                 <a href="especialidades.php"><span>◇</span> Especialidades</a>
-                <a href="#"><span>☆</span> Conquistas</a>
-                <a href="#"><span>☷</span> Atividades</a>
+                <a href="historico_conquistas.php"><span>☆</span> Conquistas</a>
                 <a href="../logout.php"><span>↳</span> Sair</a>
             </nav>
 
@@ -277,7 +296,8 @@
                                     <span></span>
                                     <div>
                                         <strong><?= e($progressao["nome"]) ?></strong>
-                                        <small><?= e($progressao["status"]) ?> • <?= formatDateBr($progressao["data_conclusao"] ?? null) ?></small>
+                                        <span class="status-badge <?= statusBadgeClass($progressao["status"] ?? null) ?>"><?= e($progressao["status"] ?? "pendente") ?></span>
+                                        <small><?= formatDateBr($progressao["data_conclusao"] ?? null) ?></small>
                                     </div>
                                 </div>
                             <?php endforeach; ?>
@@ -297,11 +317,8 @@
                             <?php foreach ($especialidadesRecentes as $especialidade): ?>
                                 <div>
                                     <strong><?= e($especialidade["nome"]) ?></strong>
-                                    <span>
-                                        <?= e($especialidade["ramo_conhecimento"] ?? "Sem ramo") ?>
-                                        • Nível <?= (int) $especialidade["nivel"] ?>
-                                        • <?= (int) $especialidade["itens_concluidos"] ?>/<?= (int) $especialidade["quantidade_itens"] ?> itens
-                                    </span>
+                                    <span><?= e($especialidade["ramo_conhecimento"] ?? "Sem ramo") ?> • <?= (int) $especialidade["itens_concluidos"] ?>/<?= (int) $especialidade["quantidade_itens"] ?> itens</span>
+                                    <span class="status-badge level-badge level-<?= (int) $especialidade["nivel"] ?>">Nível <?= (int) $especialidade["nivel"] ?></span>
                                 </div>
                             <?php endforeach; ?>
                         </div>

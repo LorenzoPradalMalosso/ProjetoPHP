@@ -24,6 +24,24 @@
         return date("d/m/Y", $timestamp);
     }
 
+    function isDoneStatus(?string $status): bool
+    {
+        return in_array($status, ["concluída", "concluida", "concluído", "concluido", "concluÃ­da", "concluÃƒÂ­da"], true);
+    }
+
+    function statusBadgeClass(?string $status): string
+    {
+        if (isDoneStatus($status)) {
+            return "status-concluida";
+        }
+
+        if ($status === "rejeitada") {
+            return "status-rejeitada";
+        }
+
+        return "status-pendente";
+    }
+
     $stmt = $conexao->prepare("
         SELECT
             u.*,
@@ -143,13 +161,59 @@
         LEFT JOIN ramosconhecimento rc ON rc.id = e.ramo_conhecimento_id
         WHERE ue.usuario_id = :usuario_id
         ORDER BY ue.id DESC
-        LIMIT 4
+        LIMIT 3
     ");
     $stmt->execute(["usuario_id" => $usuarioId]);
     $especialidadesRecentes = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
+    $stmt = $conexao->prepare("
+        SELECT *
+        FROM (
+            SELECT
+                'progressao' AS tipo,
+                p.nome AS titulo,
+                COALESCE(r.nome, 'Progressão') AS categoria,
+                up.data_conclusao AS data_evento,
+                NULL::INTEGER AS nivel,
+                120 AS pontos,
+                up.id AS origem_id
+            FROM usuarioprogressoes up
+            INNER JOIN progressoes p ON p.id = up.progressao_id
+            LEFT JOIN ramos r ON r.id = p.ramo_id
+            WHERE up.usuario_id = :usuario_id_progressao
+              AND up.status IN ('concluída', 'concluida', 'concluÃ­da')
+
+            UNION ALL
+
+            SELECT
+                'especialidade' AS tipo,
+                e.nome AS titulo,
+                COALESCE(rc.nome, 'Especialidade') AS categoria,
+                ue.data_conquista AS data_evento,
+                ue.nivel AS nivel,
+                80 AS pontos,
+                ue.id AS origem_id
+            FROM usuarioespecialidades ue
+            INNER JOIN especialidades e ON e.id = ue.especialidade_id
+            LEFT JOIN ramosconhecimento rc ON rc.id = e.ramo_conhecimento_id
+            WHERE ue.usuario_id = :usuario_id_especialidade
+        ) conquistas
+        ORDER BY
+            CASE
+                WHEN data_evento ~ '^[0-9]{4}-[0-9]{2}-[0-9]{2}$' THEN data_evento::DATE
+                ELSE NULL
+            END DESC NULLS LAST,
+            origem_id DESC
+        LIMIT 3
+    ");
+    $stmt->execute([
+        "usuario_id_progressao" => $usuarioId,
+        "usuario_id_especialidade" => $usuarioId
+    ]);
+    $conquistasRecentes = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
     $objetivos = array_slice(array_values(array_filter($progressos, function ($item) {
-        return !in_array($item["status"], ["concluída", "concluida", "concluÃ­da"], true);
+        return !isDoneStatus($item["status"] ?? null);
     })), 0, 3);
 
     if (empty($objetivos)) {
@@ -163,6 +227,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Dashboard | Azimute</title>
     <link rel="stylesheet" href="assets/css/style.css">
+    <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js" defer></script>
+    <script src="assets/js/script.js" defer></script>
 </head>
 <body class="app-body">
     <div class="app-shell">
@@ -176,14 +242,13 @@
                 <a href="pages/perfil.php"><span>○</span> Perfil</a>
                 <a href="pages/progressoes.php"><span>□</span> Progressões</a>
                 <a href="pages/especialidades.php"><span>◇</span> Especialidades</a>
-                <a href="#"><span>☆</span> Conquistas</a>
-                <a href="#"><span>☷</span> Atividades</a>
+                <a href="pages/historico_conquistas.php"><span>☆</span> Conquistas</a>
                 <a href="logout.php"><span>↳</span> Sair</a>
             </nav>
 
             <div class="law-card">
-                <strong>Deixa o mundo um pouco melhor do que o encontraste.</strong>
-                <span>Lei Escoteira</span>
+                <strong>"Deixe o mundo um pouco melhor do que encontrou."</strong>
+                <span>Robert Baden-Powell</span>
             </div>
         </aside>
 
@@ -291,7 +356,7 @@
                                 <span></span>
                                 <div>
                                     <strong><?= e($objetivo["nome"]) ?></strong>
-                                    <small>Status: <?= e($objetivo["status"]) ?></small>
+                                    <span class="status-badge <?= statusBadgeClass($objetivo["status"] ?? null) ?>"><?= e($objetivo["status"] ?? "pendente") ?></span>
                                 </div>
                             </div>
                         <?php endforeach; ?>
@@ -301,15 +366,31 @@
                 <article class="app-panel journey-panel">
                     <div class="panel-heading">
                         <h2>Resumo da sua jornada</h2>
+                        <a href="pages/historico_conquistas.php">Ver histórico</a>
                     </div>
-                    <div class="bar-chart" aria-label="Gráfico visual de resumo">
-                        <span style="height: 42%;"></span>
-                        <span style="height: 58%;"></span>
-                        <span style="height: 52%;"></span>
-                        <span style="height: 72%;"></span>
-                        <span style="height: 61%;"></span>
-                        <span style="height: 83%;"></span>
-                    </div>
+
+                    <?php if (empty($conquistasRecentes)): ?>
+                        <p class="empty-state">Nenhuma conquista registrada ainda.</p>
+                    <?php else: ?>
+                        <div class="recent-conquest-list">
+                            <?php foreach ($conquistasRecentes as $conquista): ?>
+                                <?php $isEspecialidade = ($conquista["tipo"] ?? "") === "especialidade"; ?>
+                                <div class="recent-conquest-item <?= $isEspecialidade ? "is-specialty" : "is-progression" ?>">
+                                    <span class="recent-conquest-icon">
+                                        <i data-lucide="<?= $isEspecialidade ? "badge-check" : "route" ?>"></i>
+                                    </span>
+                                    <div>
+                                        <strong><?= e($conquista["titulo"] ?? "Conquista") ?></strong>
+                                        <span><?= e($conquista["categoria"] ?? "Sem categoria") ?> • <?= formatDateBr($conquista["data_evento"] ?? null) ?></span>
+                                        <small>
+                                            <?= $isEspecialidade ? "Nível " . (int) $conquista["nivel"] : "Progressão concluída" ?>
+                                            • <?= (int) $conquista["pontos"] ?> pontos
+                                        </small>
+                                    </div>
+                                </div>
+                            <?php endforeach; ?>
+                        </div>
+                    <?php endif; ?>
                 </article>
 
                 <article class="app-panel specialties-panel">
@@ -325,7 +406,9 @@
                             <?php foreach ($especialidadesRecentes as $especialidade): ?>
                                 <div>
                                     <strong><?= e($especialidade["nome"]) ?></strong>
-                                    <span><?= e($especialidade["ramo_conhecimento"] ?? "Sem ramo") ?> • Nível <?= (int) $especialidade["nivel"] ?></span>
+                                    <span><?= e($especialidade["ramo_conhecimento"] ?? "Sem ramo") ?> • <?= formatDateBr($especialidade["data_conquista"] ?? null) ?></span>
+                                    <span><?= (int) $especialidade["itens_concluidos"] ?>/<?= (int) $especialidade["quantidade_itens"] ?> itens concluídos</span>
+                                    <span class="status-badge level-badge level-<?= (int) $especialidade["nivel"] ?>">Nível <?= (int) $especialidade["nivel"] ?></span>
                                 </div>
                             <?php endforeach; ?>
                         </div>

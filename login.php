@@ -1,21 +1,22 @@
 <?php
 
-    require_once "database/conexao.php";
+    if (session_status() !== PHP_SESSION_ACTIVE) {
+        session_start();
+    }
 
-    session_start();
-
-    // Se já estiver logado
     if (isset($_SESSION["usuario_id"])) {
         header("Location: dashboard.php");
         exit;
     }
 
-    $mensagem = "";
+    require_once "database/conexao.php";
+
+    $mensagem = $_SESSION["mensagem"] ?? "";
+    unset($_SESSION["mensagem"]);
 
     if ($_SERVER["REQUEST_METHOD"] === "POST") {
-
-        $email = trim($_POST["email"]);
-        $senha = $_POST["senha"];
+        $email = trim($_POST["email"] ?? "");
+        $senha = $_POST["senha"] ?? "";
 
         $stmt = $conexao->prepare("
             SELECT *
@@ -33,7 +34,6 @@
             $usuario &&
             password_verify($senha, $usuario["senha"])
         ) {
-
             $_SESSION["usuario_id"] = $usuario["id"];
             $_SESSION["usuario_nome"] = $usuario["nome"];
             $_SESSION["usuario_categoria"] = $usuario["categoria"];
@@ -42,7 +42,6 @@
             header("Location: dashboard.php");
             exit;
         } else {
-
             $mensagem = "Email ou senha incorretos.";
         }
     }
