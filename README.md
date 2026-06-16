@@ -43,7 +43,7 @@ createdb azimute
 Execute o script de estrutura e dados iniciais:
 
 ```bash
-psql -d azimute -f database/azimute.sql
+psql -d azimute -f backup.sql
 ```
 
 As credenciais de conexão ficam em:
