@@ -1,14 +1,14 @@
 <?php
 
-    require_once "database/conexao.php"; // Faz conexão com o banco
+    require_once "database/conexao.php";
 
-    if (session_status() !== PHP_SESSION_ACTIVE) { // Verifica se tá logado
+    if (session_status() !== PHP_SESSION_ACTIVE) {
         session_start();
     }
 
     $mensagem = "";
 
-    if ($_SERVER["REQUEST_METHOD"] === "POST") { // Verifica se o formulário foi enviado
+    if ($_SERVER["REQUEST_METHOD"] === "POST") {
         $nome = trim($_POST["nome"] ?? "");
         $email = trim($_POST["email"] ?? "");
         $senhaInformada = $_POST["senha"] ?? "";
@@ -17,14 +17,14 @@
         $data_integracao = $_POST["data_integracao"] ?? "";
         $data_nascimento = $_POST["data_nascimento"] ?? "";
 
-        if (strlen($senhaInformada) < 8) { // Vê tamanho da senha -> Mínimo 8
+        if (strlen($senhaInformada) < 8) {
             $mensagem = "A senha deve possuir no mínimo 8 caracteres.";
-        } else { // Se tiver com tamanho correto...
-            $stmt = $conexao->prepare( // Verifica se o email existe
+        } else {
+            $stmt = $conexao->prepare(
                 "SELECT id FROM usuarios WHERE email = :email"
             );
 
-            $stmt->execute([ // :email recebe o valor da variável $email
+            $stmt->execute([
                 "email" => $email
             ]);
 
