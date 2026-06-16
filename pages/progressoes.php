@@ -27,7 +27,7 @@
 
     function isDoneStatus(?string $status): bool
     {
-        return in_array($status, ["concluída", "concluida", "concluído", "concluido", "concluÃ­da", "concluÃƒÂ­da"], true);
+        return $status === "concluida";
     }
 
     function statusBadgeClass(?string $status): string
@@ -60,7 +60,7 @@
         $progressaoId = (int) ($_POST["progressao_id"] ?? 0);
         $status = $_POST["status"] ?? "pendente";
         $dataConclusao = $_POST["data_conclusao"] ?: date("Y-m-d");
-        $statusValidos = ["pendente", "concluída", "rejeitada"];
+        $statusValidos = ["pendente", "concluida", "rejeitada"];
 
         if (!in_array($status, $statusValidos, true)) {
             $mensagem = "Status inválido.";
@@ -246,7 +246,7 @@
                                     <label for="status-<?= (int) $progressao["id"] ?>">Status</label>
                                     <select id="status-<?= (int) $progressao["id"] ?>" name="status">
                                         <option value="pendente" <?= $statusAtual === "pendente" ? "selected" : "" ?>>Pendente</option>
-                                        <option value="concluída" <?= isDoneStatus($statusAtual) ? "selected" : "" ?>>Concluída</option>
+                                        <option value="concluida" <?= isDoneStatus($statusAtual) ? "selected" : "" ?>>Concluída</option>
                                         <option value="rejeitada" <?= $statusAtual === "rejeitada" ? "selected" : "" ?>>Rejeitada</option>
                                     </select>
                                 </div>
