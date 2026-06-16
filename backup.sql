@@ -2,7 +2,7 @@
 -- PostgreSQL database dump
 --
 
-\restrict fARaglHcpICLbJpWDvzdjPJL8YeesYNrXtpu67NNp3bRc0jCpYwkfQRZsLWWIfw
+\restrict S4HYHEvLFRscgc2MzRfyjC9preRCtz4xzaqVBo2p2yOIcPtGprTYjUEUutmSLPt
 
 -- Dumped from database version 18.4
 -- Dumped by pg_dump version 18.4
@@ -221,7 +221,7 @@ CREATE TABLE public.usuarioprogressoes (
     progressao_id integer,
     status character varying(30) DEFAULT 'pendente'::character varying NOT NULL,
     data_conclusao character varying(10) NOT NULL,
-    CONSTRAINT chk_status CHECK (((status)::text = ANY ((ARRAY['pendente'::character varying, 'concluída'::character varying, 'rejeitada'::character varying])::text[])))
+    CONSTRAINT chk_status CHECK (((status)::text = ANY ((ARRAY['pendente'::character varying, 'concluida'::character varying, 'rejeitada'::character varying])::text[])))
 );
 
 
@@ -450,6 +450,7 @@ COPY public.ramosconhecimento (id, nome, descricao) FROM stdin;
 --
 
 COPY public.usuarioespecialidades (id, usuario_id, especialidade_id, data_conquista, itens_concluidos, nivel) FROM stdin;
+8	6	1	2026-06-16	{1,2,3,4,5,6,7,8,9}	3
 \.
 
 
@@ -458,6 +459,8 @@ COPY public.usuarioespecialidades (id, usuario_id, especialidade_id, data_conqui
 --
 
 COPY public.usuarioprogressoes (id, usuario_id, progressao_id, status, data_conclusao) FROM stdin;
+6	6	9	concluida	2026-06-16
+7	6	10	concluida	2026-06-16
 \.
 
 
@@ -466,6 +469,7 @@ COPY public.usuarioprogressoes (id, usuario_id, progressao_id, status, data_conc
 --
 
 COPY public.usuarios (id, nome, email, senha, categoria, data_integracao, data_nascimento, ramo_id) FROM stdin;
+6	Lorenzo	lpmalosso@gmail.com	$2y$12$evMwWTmbRKna7kYQbnheUOJnjEMLE8I/xfw2FkhiIbZ7L1ny3qq.2	Escoteiro	2015-11-28	2009-03-03	3
 \.
 
 
@@ -501,21 +505,21 @@ SELECT pg_catalog.setval('public.ramosconhecimento_id_seq', 1, false);
 -- Name: usuarioespecialidades_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
 --
 
-SELECT pg_catalog.setval('public.usuarioespecialidades_id_seq', 7, true);
+SELECT pg_catalog.setval('public.usuarioespecialidades_id_seq', 8, true);
 
 
 --
 -- Name: usuarioprogressoes_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
 --
 
-SELECT pg_catalog.setval('public.usuarioprogressoes_id_seq', 4, true);
+SELECT pg_catalog.setval('public.usuarioprogressoes_id_seq', 7, true);
 
 
 --
 -- Name: usuarios_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
 --
 
-SELECT pg_catalog.setval('public.usuarios_id_seq', 4, true);
+SELECT pg_catalog.setval('public.usuarios_id_seq', 6, true);
 
 
 --
@@ -642,5 +646,5 @@ ALTER TABLE ONLY public.usuarios
 -- PostgreSQL database dump complete
 --
 
-\unrestrict fARaglHcpICLbJpWDvzdjPJL8YeesYNrXtpu67NNp3bRc0jCpYwkfQRZsLWWIfw
+\unrestrict S4HYHEvLFRscgc2MzRfyjC9preRCtz4xzaqVBo2p2yOIcPtGprTYjUEUutmSLPt
 
